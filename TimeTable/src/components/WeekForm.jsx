@@ -5,48 +5,25 @@ function WeekForm({
   setActiveW,
   setWeeks,
   activeWeek,
-  setActivities,
-  setActiveWeek,
+  addActivity,
+  deleteActivityW,
   addGroup,
   addingGroup,
-  setAddingGroup
+  setAddingGroup,
+  activities
 }) {
 
   const [newWeek, setNewWeek] = useState("");
   const [newGroup, setNewGroup] = useState("");
   const [renameW, setRenameW] = useState("");
 
-  // ---------------- DELETE WEEK ----------------
-  const deleteW = (w) => {
-
-    if (w === "daily") {
-      alert("'Daily' cannot be deleted");
-      return;
-    }
-
-    if (w === activeWeek) {
-      setActiveWeek("daily");
-    }
-
-    setWeeks(prev =>
-      prev.filter(week => week.key !== w)
-    );
-
-    setActivities(prev =>
-      prev.filter(act => act.week !== w)
-    );
-  };
-
   // ---------------- ADD WEEK ----------------
   const addW = (e) => {
-
     e.preventDefault();
-
     if (!newWeek) {
       alert("Enter a valid name");
       return;
     }
-
     setWeeks(prev => [
       ...prev,
       {
@@ -54,15 +31,12 @@ function WeekForm({
         week: newWeek
       }
     ]);
-
     setNewWeek("");
   };
 
   // ---------------- DUPLICATE WEEK ----------------
   const duplicate = (w) => {
-
     const dupWeekKey = w.key + "Copy" + Date.now();
-
     setWeeks(prev => [
       ...prev,
       {
@@ -70,17 +44,10 @@ function WeekForm({
         week: w.week + "Copy"
       }
     ]);
-
     // duplicate activities
-    setActivities(prev => [
-      ...prev,
-      ...prev
-        .filter(act => act.week === w.key)
-        .map(act => ({
-          ...act,
-          week: dupWeekKey
-        }))
-    ]);
+    activities.forEach(act => {
+      addActivity({...act,week:dupWeekKey});
+    });
   };
 
   // ================= GROUP MODE =================
@@ -167,7 +134,7 @@ function WeekForm({
                 <button
                   type="button"
                   className="bg-blue-600 px-2 py-1 text-white"
-                  onClick={() => deleteW(week.key)}
+                  onClick={() => deleteActivityW(week.key)}
                 >
                   Delete
                 </button>

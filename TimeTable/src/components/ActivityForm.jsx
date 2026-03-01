@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-function ActivityForm({ addActivity, week, setActiveForm, editingActivity, setEditingActivity, updateActivity, groups, setAddingGroup}) {
+function ActivityForm({ addActivity, week, setActiveForm, editingActivity, setEditingActivity, updateActivity, groups, setAddingGroup, setActivities}) {
   const [name, setName] = useState("");
   const [group, setGroup] = useState("Physical");
   const [startTime, setStartTime] = useState("");
@@ -42,6 +42,7 @@ function ActivityForm({ addActivity, week, setActiveForm, editingActivity, setEd
       setEditingActivity(null);
     } else {
       addActivity(activity);
+      setActivities(prev => [...prev, activity]);
     }
     // Reset form
     setName("");

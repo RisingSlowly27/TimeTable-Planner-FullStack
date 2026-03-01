@@ -46,6 +46,18 @@ export const deleteActivity = async (req, res) => {
     res.json({message:"Deletion Success"});
 };
 
+export const deleteActivityW = async (req, res) => {
+  const delId = req.params.id;
+  const deleted = await Activity.deleteMany({ week: delId });;
+
+  if (!deleted) {
+      return res.status(404).json({
+          error: "Activity not found"
+      });
+  }
+  res.json({message:"Deletion Success"});
+};
+
 export const updateActivity = async (req, res) => {
 
   const upId = req.params.id;

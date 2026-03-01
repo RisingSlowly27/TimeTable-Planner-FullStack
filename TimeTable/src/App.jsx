@@ -13,31 +13,26 @@ function App() {
   const [editingActivity, setEditingActivity] = useState(null);
   const [addingGroup, setAddingGroup] = useState(false);
   const [activeWeek,setActiveWeek]=useState('daily');
+  const [weeks,setWeeks]=useState(()=>{
+    const strWeek=localStorage.getItem("weeks");
+    return strWeek ? JSON.parse(strWeek) : [{key:'daily',week:'Daily'}];
+  });
 
   const fetchActivities = async () => {
-
     setLoading(true);
     setError(null);
 
     try {
-
       const response = await fetch(
         `http://localhost:8000/activities?week=${activeWeek}`
       );
-
       const data = await response.json();
-
       setActivities(data);
-
     } catch (err) {
-
       console.log(err);
       setError("Failed to load activities");
-
     } finally {
-
       setLoading(false);
-
     }
   };
 
@@ -46,43 +41,26 @@ function App() {
   }, [activeWeek]);
 
   useEffect(() => {
-
     const fetchGroups = async () => {
-
       try {
-
         const response = await fetch(
           "http://localhost:8000/groups"
         );
-
         const data = await response.json();
-
         setGroups(data);
-
       } catch (err) {
-
         console.log("Failed to load groups", err);
-
       }
     };
-
     fetchGroups();
-
   }, []);
-
-  const [weeks,setWeeks]=useState(()=>{
-    const strWeek=localStorage.getItem("weeks");
-    return strWeek ? JSON.parse(strWeek) : [{key:'daily',week:'Daily'}];
-  });
 
   useEffect(() => {
     localStorage.setItem("weeks", JSON.stringify(weeks));
   }, [weeks]);
 
   const addActivity = async (activity) => {
-
     try {
-
       const response = await fetch(
         "http://localhost:8000/activities",
         {
@@ -93,27 +71,18 @@ function App() {
           body: JSON.stringify(activity)
         }
       );
-
       if (!response.ok) {
         throw new Error("Failed to add activity");
       }
-
       const savedActivity = await response.json();
-
-      // Update state with backend response
-      setActivities(prev => [...prev, savedActivity]);
-
     } catch (error) {
-
       console.log("Add activity error:", error);
       setError("Could not add activity");
     }
   };
-
+  
   const updateActivity = async (id, updatedData) => {
-
     try {
-
       const response = await fetch(
         `http://localhost:8000/activities/${id}`,
         {
@@ -124,47 +93,58 @@ function App() {
           body: JSON.stringify(updatedData)
         }
       );
-
       const updated = await response.json();
-
       setActivities(prev =>
         prev.map(act => act._id === id ? updated : act)
       );
-
     } catch (error) {
-
       console.log("Update error:", error);
-
     }
   };
 
   const deleteActivity = async (id) => {
-
   try {
-
     await fetch(
-      `http://localhost:8000/activities/${id}`,
+      `http://localhost:8000/activities/a/${id}`,
       {
         method: "DELETE"
       }
     );
-
     // Update UI after backend success
     setActivities(prev =>
       prev.filter(act => act._id !== id)
     );
-
   } catch (error) {
-
     console.log("Delete error:", error);
+  }
+};
 
+const deleteActivityW = async (w) => {
+  if (w === "daily") {
+    alert("'Daily' cannot be deleted");
+    return;
+  }
+  if (w === activeWeek) {
+    setActiveWeek("daily");
+  }
+  try {
+    await fetch(
+      `http://localhost:8000/activities/w/${w}`,
+      {
+        method: "DELETE"
+      }
+    );
+    // Update UI after backend success
+    setWeeks(prev =>
+      prev.filter(week => week.key !== w)
+    );
+  } catch (error) {
+    console.log("Delete error:", error);
   }
 };
 
 const addGroup = async (groupName) => {
-
   try {
-
     const response = await fetch(
       "http://localhost:8000/groups",
       {
@@ -175,24 +155,17 @@ const addGroup = async (groupName) => {
         body: JSON.stringify({ name: groupName })
       }
     );
-
     const newGroup = await response.json();
-
     setGroups(prev => [...prev, newGroup]);
-
   } catch (error) {
-
     console.log("Add group error:", error);
-
   }
 };
 
   const changeWeek=(key)=>{
     setActiveWeek(key);
   }
-
   const [activeForm,setActiveForm]=useState(false);
-
   const [activeW,setActiveW]=useState(false);
 
   return (
@@ -223,11 +196,11 @@ const addGroup = async (groupName) => {
         </div>
         <div className='w-full col-span-2 text-center'>
         <button className='w-1/2 m-2 p-2 bg-red-500 border col-span-1' onClick={()=>{setActiveForm(true);setEditingActivity(null)}}>Add Activity</button>
-        {(activeForm || editingActivity)?<ActivityForm addActivity={addActivity} week={activeWeek} setActiveForm={setActiveForm} editingActivity={editingActivity} setEditingActivity={setEditingActivity} updateActivity={updateActivity} groups={groups} setAddingGroup={setAddingGroup}/>:null}
+        {(activeForm || editingActivity)?<ActivityForm addActivity={addActivity} week={activeWeek} setActiveForm={setActiveForm} editingActivity={editingActivity} setEditingActivity={setEditingActivity} updateActivity={updateActivity} groups={groups} setAddingGroup={setAddingGroup} setActivities={setActivities}/>:null}
         </div>
         <div className='w-full col-span-2 text-center'>
           <button onClick={()=>{setActiveW(true);setAddingGroup(false);}} className='max-h-10 w-1/2 m-2 p-2 bg-red-500 border col-span-2'>Add/Delete Week</button>
-          <div className={(activeW || addingGroup)?"block":"hidden"}><WeekForm weeks={weeks} setActiveW={setActiveW} setWeeks={setWeeks} activeWeek={activeWeek} setActivities={setActivities} setActiveWeek={setActiveWeek} addGroup={addGroup} addingGroup={addingGroup} setAddingGroup={setAddingGroup}/></div>
+          <div className={(activeW || addingGroup)?"block":"hidden"}><WeekForm weeks={weeks} setActiveW={setActiveW} setWeeks={setWeeks} activeWeek={activeWeek} setActiveWeek={setActiveWeek} addGroup={addGroup} addingGroup={addingGroup} setAddingGroup={setAddingGroup} addActivity={addActivity} deleteActivityW={deleteActivityW} activities={activities}/></div>
         </div>
       </div>
     </>
